@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
-
+import "./Base64.sol";
 
 contract SK7Punks is ERC721, ERC721Enumerable, PaymentSplitter {
     using Counters for Counters.Counter;
@@ -24,6 +24,30 @@ contract SK7Punks is ERC721, ERC721Enumerable, PaymentSplitter {
 
         _safeMint(msg.sender, current);
         _idCounter.increment();
+    }
+
+ function tokenURI(uint256 tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721 Metadata: URI query for nonexistent token"
+        );
+
+        string memory jsonURI = Base64.encode(
+            abi.encodePacked(
+                '{ "name": "SK7Punk #',
+                tokenId,
+                '", "description": "SK7Punks are nfts made to learn how to interact with web3", "image": "',
+                "// TODO: Calculate image URL",
+                '"}'
+            )
+        );
+
+        return string(abi.encodePacked("data:application/json;base64,", jsonURI));
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
