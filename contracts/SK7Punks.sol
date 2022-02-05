@@ -4,27 +4,25 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "./Base64.sol";
 import "./SK7PunksDNA.sol";
 
-contract SK7Punks is ERC721, ERC721Enumerable, PaymentSplitter, SK7PunksDNA {
+contract SK7Punks is ERC721, ERC721Enumerable, SK7PunksDNA {
     using Counters for Counters.Counter;
-    mapping(uint256 => uint256) public tokenDNA;
-
+    using Strings for uint256;
 
     Counters.Counter private _idCounter;
-    uint public maxSupply;
+    uint256 public maxSupply;
+    mapping(uint256 => uint256) public tokenDNA;
 
-    constructor(address[] memory _payees, uint256[] memory _shares, uint256 _maxSupply) ERC721("SK7Punks", "SK7") PaymentSplitter(_payees, _shares) payable{
+    constructor(uint256 _maxSupply) ERC721("SK7Punks", "SK7") {
         maxSupply = _maxSupply;
     }
 
-    function mint() public payable {
-        uint current = _idCounter.current();
-        require(msg.value >= 50000000000000000, "You need 0.05 ETH to mint SK7Punks, A PAGAAAAAR");
-        require(current < maxSupply, "No calipos left, only masibon");
-
+    function mint() public {
+        uint256 current = _idCounter.current();
+        require(current < maxSupply, "No SK7Punks left :(");
 
         tokenDNA[current] = deterministicPseudoRandomDNA(current, msg.sender);
         _safeMint(msg.sender, current);
@@ -92,25 +90,27 @@ contract SK7Punks is ERC721, ERC721Enumerable, PaymentSplitter, SK7PunksDNA {
 
         uint256 dna = tokenDNA[tokenId];
         string memory image = imageByDNA(dna);
-        
+
         string memory jsonURI = Base64.encode(
             abi.encodePacked(
-                '{ "name": "SK7Punk #',
-                tokenId,
-                '", "description": "SK7Punks are nfts made to learn how to interact with web3", "image": "',
-                '"image": "',
+                '{ "name": "SK7Punks #',
+                tokenId.toString(),
+                '", "description": "SK7 Punks are randomized Avataaars stored on chain to learn DApp development", "image": "',
                 image,
                 '"}'
             )
         );
 
-        return string(abi.encodePacked("data:application/json;base64,", jsonURI));
+        return
+            string(abi.encodePacked("data:application/json;base64,", jsonURI));
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
-        internal
-        override(ERC721, ERC721Enumerable)
-    {
+    // Override required
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
